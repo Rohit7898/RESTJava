@@ -9,13 +9,13 @@ public class Employee {
 	private String role;
 	private String image;
 	private float balance;
-	boolean pass=false, r=false;
+	boolean pass=false;
 	
 	public Employee() {
 		super();
 	}
 	public Employee(int employeeId, String employeeName, String employeeEmail, String employeeContact,
-			String employeePassword, String role, String image, float balance) {
+			String employeePassword, String role, String image, float balance, boolean pass) {
 		super();
 		this.employeeId = employeeId;
 		this.employeeName = employeeName;
@@ -25,6 +25,7 @@ public class Employee {
 		this.role = role;
 		this.image = image;
 		this.balance = balance;
+		this.pass=pass;
 	}
 	public int getEmployeeId() {
 		return employeeId;
@@ -145,10 +146,9 @@ public class Employee {
 	public void setPass(boolean pass) {
 		this.pass = pass;
 	}
-	public boolean isR() {
-		return r;
+	public Employee(boolean pass) {
+		super();
+		this.pass = pass;
 	}
-	public void setR(boolean r) {
-		this.r = r;
-	}
+	
 }

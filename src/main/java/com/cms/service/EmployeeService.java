@@ -1,5 +1,7 @@
 package com.cms.service;
 
+import java.awt.Menu;
+import java.awt.MenuItem;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
@@ -11,26 +13,36 @@ import java.util.HashMap;
 import java.util.List;
 
 import com.cms.connection.DbConnection;
+import com.cms.model.Cart;
 import com.cms.model.DBStatus;
 import com.cms.model.Employee;
 import com.cms.model.Menu_Item;
+import com.cms.model.Order;
 
 public class EmployeeService {
 
 	public DbConnection db = new DbConnection();
 
-	public DBStatus Login( String m_username,String  m_password) 
+	public List<Employee> Login( String m_username,String  m_password) 
 	{
         // boolean loginYes=true;
 
 	 DbConnection db = new DbConnection();
-	 DBStatus ds= new DBStatus();
-     if(db.loginEmp(m_username,m_password))
-     {
-    	 ds.setStatus(true);
-     }
+	 List<Employee> data = new ArrayList<Employee>();
+	 ResultSet result=db.loginEmp(m_username, m_password);
+	 try {
+			while(result.next()) {
+				Employee ds= new Employee
+						(result.getInt(1),result.getString(2),result.getString(3),result.getString(4),result.getString(5),
+								result.getString(6),result.getString(7),result.getFloat(8),true);
+				data.add(ds);
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+     return data;
      
-     return ds;
 	}
 
 	public boolean loginVen(int name, String pass) {
@@ -87,48 +99,70 @@ public class EmployeeService {
 		}
 	}
 
-	public void showMenu() {
-		HashMap<String, String> conditions = new HashMap<String, String>();
-		String[] fields = { "item_id", "item_name", "item_price", "item_image", "Vendor_id" };
-
-		db.select("menu_item", fields, conditions);
+	public List<Menu_Item> showMenu() {
+		String[] fields = {"*"};
+        HashMap<String, String> condition = new HashMap<String, String>();
+        ResultSet resultSet = db.select("menu_item", fields, condition);
+        List<Menu_Item> data = new ArrayList<Menu_Item>();
+        //System.out.println(data);
+        try {
+			while(resultSet.next()) {
+				Menu_Item members = new Menu_Item
+						(resultSet.getInt(1), resultSet.getString(2), resultSet.getFloat(3), resultSet.getString(4), resultSet.getInt(5));
+				data.add(members);
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        return data;
 	}
 
-	public boolean addToCart(int item, int id, float balance) {
+	public boolean addToCart(Menu_Item item, String userId) {
 		HashMap<String, String> conditions = new HashMap<String, String>();
 		HashMap<String, String> data = new HashMap<String, String>();
 		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd");
 		LocalDate localDate = LocalDate.now();
 		Calendar cal = Calendar.getInstance();
 		SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
-
-		for (Menu_Item m : db.mi) {
-
-			if (m.getN() == item) {
-				if (m.getItemPrice() > balance) {
-					return false;
-				} else {
-					String[] field = { "Order_id", "item_id", "user_id", "quantity", "date", "time", "token",
+		String[] field = { "item_id", "user_id", "quantity", "date", "time","token",
 							"Vendor_id", "Tprice", "Status", "Msg" };
-					String[] values = { "103", Integer.toString(m.getItemId()), Integer.toString(id), "1",
-							dtf.format(localDate), sdf.format(cal.getTime()), "15", Integer.toString(m.getVendorId()),
-							Float.toString(m.getItemPrice()), "0", "" };
-					boolean ins = db.insert("cms.order", field, values);
-					float a = (db.ae.get(0).getBalance()) - (m.getItemPrice());
-					data.put("user_balance", Float.toString(a));
-					conditions.put("user_id", Integer.toString(db.ae.get(0).getEmployeeId()));
-					boolean update = db.update("employee", data, conditions);
-					return ins;
-				}
-			}
+		String[] values = { Integer.toString(item.getItemId()), userId, "1",
+		dtf.format(localDate), sdf.format(cal.getTime()), "0",Integer.toString(item.getVendorId()),
+		Float.toString(item.getItemPrice()), "0", "" };
+		boolean ins = db.insert("cms.order", field, values);
+		if(ins)
+		{
+//			float a = (db.ae.get(0).getBalance()) - (m.getItemPrice());
+//			data.put("user_balance", Float.toString(a));
+//			conditions.put("user_id", Integer.toString(db.ae.get(0).getEmployeeId()));
+//			boolean update = db.update("employee", data, conditions);
+			return true;
 		}
+		
 		return false;
 	}
 
-	public void viewCart(int id) {
-		String sql = "Select Order_id, mi.item_name, quantity, date, Tprice, v.Vendor_Name, Status "
-				+ "from cms.order o, menu_item mi, vendor v where o.item_id=mi.item_id and o.Vendor_id=v.Vendor_id and Status='0'";
-		db.select_query(sql);
+	public List<Cart> viewCart(int id) {
+		
+		String sql = "Select Order_id,mi.item_id, mi.item_name, quantity, date, Tprice, v.Vendor_Name, Status "
+				+ "from cms.order o, menu_item mi, vendor v where o.item_id=mi.item_id and o.Vendor_id=v.Vendor_id and o.user_id='"+id+"' and Status='0'";
+		ResultSet resultSet=db.select_query(sql);
+		System.out.println(resultSet);
+		List<Cart> data = new ArrayList<Cart>();
+        //System.out.println(data);
+        try {
+			while(resultSet.next()) {
+				Cart members = new Cart
+						(resultSet.getInt(1), resultSet.getInt(2), resultSet.getString(3), resultSet.getInt(4), 
+								resultSet.getDate(5), resultSet.getFloat(6), resultSet.getString(7), resultSet.getInt(8));
+				data.add(members);
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        return data;
 	}
 
 	public void showOrder(int id) {
@@ -155,5 +189,10 @@ public class EmployeeService {
 		}
 	}
 
+	public List<Cart> deleteItem(int itemD, String userId)
+	{
+		boolean update = db.delete("cms.order", "Order_id", Integer.toString(itemD));
+		return viewCart(Integer.parseInt(userId));
+	}
 	
 }

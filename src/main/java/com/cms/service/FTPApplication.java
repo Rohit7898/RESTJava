@@ -1,4 +1,4 @@
-package com.cms.service;
+ package com.cms.service;
 
 
 import org.glassfish.jersey.server.ResourceConfig;
@@ -49,7 +49,7 @@ class CORSFilter implements ContainerResponseFilter {
 
     response.getHeaders().add("Access-Control-Allow-Headers",
 
-            "origin, content-type, accept, authorization");
+            "allowedOrigin, content-type, accept, authorization");
 
     response.getHeaders().add("Access-Control-Allow-Credentials", "true");
 
