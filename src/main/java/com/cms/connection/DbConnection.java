@@ -14,6 +14,8 @@ import com.cms.model.Menu_Item;
 import com.cms.model.Order;
 import com.cms.service.EmployeeService;
 
+import lombok.val;
+
 import java.sql.Date;
 
 public class DbConnection {
@@ -169,6 +171,39 @@ public class DbConnection {
         return status;
     }
 
+    public boolean updateCheck(String table,HashMap<String, String> data, String field, int[] values){
+        dao = new DAO();
+        con = dao.getConnection();
+        boolean status = false;
+        String sql = "UPDATE "+table+" SET ";
+        for (Map.Entry<String, String> entry: data.entrySet())
+            sql = sql + entry.getKey()+ " = '"+ entry.getValue()+"', ";
+        sql = sql.substring(0, sql.length()-2);
+        //System.out.println(sql);
+
+        if (values.length>0){
+            sql = sql+" WHERE "+ field+" IN ( '";
+            for (int i=0;i<values.length;i++)
+            {
+                sql = sql + values[i] + "','";
+            }
+            sql = sql.substring(0, sql.length()-2);
+            sql = sql+")";
+        }
+        System.out.println("Condition: " +sql);
+        try {
+            if (!con.isClosed() || con != null) {
+                PreparedStatement preparedStmt = con.prepareStatement(sql);
+                int count = preparedStmt.executeUpdate();
+                //System.out.println("update count -->"+count);
+                if (count > 0)
+                    status = true;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return status;
+    }
     public ResultSet select_query(String sql){
 
         dao = new DAO();

@@ -7,6 +7,7 @@ import java.util.List;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -17,6 +18,7 @@ import com.cms.model.Cart;
 import com.cms.model.DBStatus;
 import com.cms.model.Employee;
 import com.cms.model.Menu_Item;
+import com.cms.model.empTrans;
 @Path("cms")
 
 public class TrainingRest {
@@ -67,6 +69,16 @@ public class TrainingRest {
 	 return es.viewCart(userId);
 	 }
 	 
+	 @GET
+	 @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+	 @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
+	 @Path("getTrans/{userId}") //http://localhost:8080/CMS/api/cms/order/addToCart/49104
+	 public List<empTrans> getTrans(@PathParam("userId") int userId){
+		 System.out.println(userId);
+	 EmployeeService es = new EmployeeService();
+	 return es.getTrans(userId);
+	 }
+	 
 	 @POST
 	 @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
 	 @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
@@ -75,5 +87,28 @@ public class TrainingRest {
 		 System.out.println(item+""+userId);
 	 EmployeeService es = new EmployeeService();
 	 return es.deleteItem(item, userId);
+	 }
+	 
+	 @PUT
+	 @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+	 @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
+	 @Path("addBalance/{userId}") //http://localhost:8080/CMS/api/cms/order/addToCart/49104
+	 public boolean addBalance(float item, @PathParam("userId") String userId){
+		 System.out.println(item+""+userId);
+	 EmployeeService es = new EmployeeService();
+	 return es.addBalance(item, userId);
+	 }
+	 
+	 @PUT
+	 @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+	 @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
+	 @Path("checkOut/{userId}") //http://localhost:8080/CMS/api/cms/order/addToCart/49104
+	 public List<Cart> addBalance(Cart[] item,  @PathParam("userId") String userId){
+		 for(int i=0;i<item.length;i++)
+		 {
+			 System.out.println(item[i].getOrderId());
+		 }
+	 EmployeeService es = new EmployeeService();
+	 return es.checkOut(item,userId);
 	 }
 }

@@ -18,6 +18,7 @@ import com.cms.model.DBStatus;
 import com.cms.model.Employee;
 import com.cms.model.Menu_Item;
 import com.cms.model.Order;
+import com.cms.model.empTrans;
 
 public class EmployeeService {
 
@@ -79,27 +80,7 @@ public class EmployeeService {
 //                
 	}
 
-	public String addBalance(float amount) {
-
-		HashMap<String, String> conditions = new HashMap<String, String>();
-		HashMap<String, String> data = new HashMap<String, String>();
-		if (amount < 0) {
-			return "Amount can not be negetive";
-		} else if (amount > 1000) {
-			return "Amount can not be more than $1000";
-		} else {
-			float a = (db.ae.get(0).getBalance()) + (amount);
-			data.put("user_balance", Float.toString(a));
-			conditions.put("user_id", Integer.toString(db.ae.get(0).getEmployeeId()));
-			boolean update = db.update("employee", data, conditions);
-			if (update)
-				return "Balance added";
-			else
-				return "Not addedd";
-		}
-	}
-
-	public List<Menu_Item> showMenu() {
+		public List<Menu_Item> showMenu() {
 		String[] fields = {"*"};
         HashMap<String, String> condition = new HashMap<String, String>();
         ResultSet resultSet = db.select("menu_item", fields, condition);
@@ -195,4 +176,66 @@ public class EmployeeService {
 		return viewCart(Integer.parseInt(userId));
 	}
 	
+	public boolean addBalance(float itemD, String userId)
+	{
+		HashMap<String, String> conditions = new HashMap<String, String>();
+		HashMap<String, String> data = new HashMap<String, String>();
+		
+			data.put("user_balance", Float.toString(itemD));
+			conditions.put("user_id", userId);
+			return db.update("employee", data, conditions);
+	}
+
+	public List<Cart> checkOut(Cart[] itemD, String userId)
+	{
+		HashMap<String, String> data = new HashMap<String, String>();
+		HashMap<String, String> conditions = new HashMap<String, String>();
+		HashMap<String, String> data1 = new HashMap<String, String>();
+		int[] condition=new int[itemD.length];
+		String sql="select user_balance from employee where user_id = '"+userId+"'";
+		float balance=0, userbalance=0;
+		data.put("Status", "1");
+		for(int i=0;i<itemD.length;i++)
+		{
+			 condition[i]= itemD[i].getOrderId();
+			 balance=balance+itemD[i].getTotalPrice();
+		}
+		db.updateCheck("cms.order", data, "Order_id", condition);
+		ResultSet resultSet=db.select_query(sql);
+		try {
+			while(resultSet.next()) {
+				userbalance=resultSet.getFloat(1);
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		data1.put("user_balance", Float.toString(userbalance-balance));
+		conditions.put("user_id", userId);
+		 db.update("employee", data1, conditions);
+		return viewCart(Integer.parseInt(userId));
+	}
+
+	public List<empTrans> getTrans(int id) {
+		
+		String sql = "Select Order_id,mi.item_id, mi.item_name, date, Tprice, v.Vendor_Name, Status "
+				+ "from cms.order o, menu_item mi, vendor v where o.item_id=mi.item_id and o.Vendor_id=v.Vendor_id and o.user_id='"+id+"' and Status IN "
+						+ "(1,2,3)";
+		ResultSet resultSet=db.select_query(sql);
+		System.out.println(resultSet);
+		List<empTrans> data = new ArrayList<empTrans>();
+        //System.out.println(data);
+        try {
+			while(resultSet.next()) {
+				empTrans members = new empTrans
+						(resultSet.getInt(1), resultSet.getInt(2), resultSet.getString(3), 
+								resultSet.getDate(4), resultSet.getFloat(5), resultSet.getString(6), resultSet.getInt(7));
+				data.add(members);
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        return data;
+	}
 }
